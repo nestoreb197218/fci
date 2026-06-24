@@ -27,7 +27,7 @@
   --yellow:#b86e00;--orange:#b85010;--red:#b02828;
   --accent:#b86e00
 }
-body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;min-height:100vh;transition:background .25s,color .25s;zoom:0.85}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;min-height:100vh;transition:background .25s,color .25s}
 /* ── Botón tema ── */
 #btn-tema{
   display:inline-flex;align-items:center;gap:5px;
@@ -179,7 +179,7 @@ select{
 #main{max-width:1600px;margin:0 auto;padding:0 24px 60px;display:none}
 #result-info{font-size:13px;color:var(--text3);padding:6px 0 4px;letter-spacing:.04em}
 
-#tbl-wrap{width:100%;overflow:auto;max-height:calc(100vh - 230px);position:relative}
+#tbl-wrap{width:100%;overflow:auto;max-height:calc(100vh - 155px);position:relative}
 table{width:100%;border-collapse:collapse;min-width:1100px}
 thead{position:sticky;top:0;z-index:50}
 th{
@@ -934,17 +934,12 @@ function mostrarRanking(btn, tipoRenta) {
   rankActual = tipoRenta;
   const rect = btn.getBoundingClientRect();
   if (window.innerWidth > 600) {
-    const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
-    const vw = window.innerWidth / zoom, vh = window.innerHeight / zoom;
-    const r = {top:rect.top/zoom, bottom:rect.bottom/zoom, left:rect.left/zoom};
-    const ttW = 380, ttH = 400, mg = 10;
-    let top = r.bottom + 8;
-    if (top + ttH > vh - mg) top = Math.max(mg, r.top - ttH - 8);
-    let left = r.left;
-    if (left + ttW > vw - mg) left = vw - ttW - mg;
-    if (left < mg) left = mg;
-    tt.style.top  = top + "px";
-    tt.style.left = left + "px";
+    const ttW=380,ttH=400,mg=10;
+    let top=rect.bottom+8, left=rect.left;
+    if(top+ttH>window.innerHeight-mg) top=Math.max(mg,rect.top-ttH-8);
+    if(left+ttW>window.innerWidth-mg)  left=window.innerWidth-ttW-mg;
+    if(left<mg) left=mg;
+    tt.style.top=top+"px"; tt.style.left=left+"px";
   } else {
     document.getElementById("tt-overlay").style.display = "block";
   }
@@ -1012,17 +1007,12 @@ function mostrarCartera(el, nombre, claseId, fondoId) {
 
   const rect = el.getBoundingClientRect();
   if (window.innerWidth > 600) {
-    const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
-    const vw = window.innerWidth / zoom, vh = window.innerHeight / zoom;
-    const r = {top:rect.top/zoom, bottom:rect.bottom/zoom, left:rect.left/zoom};
-    const ttW = 380, ttH = 430, mg = 10;
-    let top = r.bottom + 8;
-    if (top + ttH > vh - mg) top = Math.max(mg, r.top - ttH - 8);
-    let left = r.left;
-    if (left + ttW > vw - mg) left = vw - ttW - mg;
-    if (left < mg) left = mg;
-    tt.style.top  = top + "px";
-    tt.style.left = left + "px";
+    const ttW=380,ttH=430,mg=10;
+    let top=rect.bottom+8, left=rect.left;
+    if(top+ttH>window.innerHeight-mg) top=Math.max(mg,rect.top-ttH-8);
+    if(left+ttW>window.innerWidth-mg)  left=window.innerWidth-ttW-mg;
+    if(left<mg) left=mg;
+    tt.style.top=top+"px"; tt.style.left=left+"px";
   } else {
     document.getElementById("tt-overlay").style.display = "block";
   }
