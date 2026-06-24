@@ -266,6 +266,12 @@ tr:hover td{background:rgba(245,158,11,.04)}
 .tt-error{color:var(--red);font-size:14px;line-height:1.6}
 .tt-item{display:grid;grid-template-columns:1fr auto auto;gap:4px 8px;padding:4px 0;border-bottom:1px solid var(--border);font-size:14px;align-items:center}
 .tt-item:last-child{border-bottom:none}
+.tt-nuevo{
+  display:inline-block;font-size:9px;font-weight:700;
+  background:#22d3a022;color:#22d3a0;border:1px solid #22d3a066;
+  border-radius:4px;padding:1px 5px;margin-left:5px;vertical-align:middle;
+  letter-spacing:.04em;white-space:nowrap
+}
 .tt-activo{color:var(--text);flex:1;line-height:1.3}
 .tt-pct{color:var(--accent);font-weight:700;white-space:nowrap;min-width:44px;text-align:right}
 .tt-bar-wrap{width:100%;height:2px;background:var(--border);border-radius:2px;margin-top:3px}
@@ -1052,16 +1058,59 @@ function renderCartera(tt, nombre, items, fecha, fichaUrl) {
   const mx = filtered[0].porcentaje ?? filtered[0].percentage ?? 1;
   const otros = items.filter(a => (a.porcentaje??a.percentage??0) <= 1)
     .reduce((s,a) => s + (a.porcentaje??a.percentage??0), 0);
+
+  // ── Detectar activos nuevos (últimos 10 días) ──────────────────────────
+  const DIAS_NUEVO = 10;
+  const lsKey = `cartera_prev_${fondoId}`;
+  const ahora = Date.now();
+  const MS10D = DIAS_NUEVO * 86400000;
+  let prevData = null;
+  try { prevData = JSON.parse(localStorage.getItem(lsKey)); } catch(e) {}
+
+  // Nombres de activos de la composición anterior
+  const prevNombres = prevData ? new Set(prevData.items.map(a => a.nombre ?? a.name ?? a.activo ?? "")) : null;
+  // Fecha en que se detectaron como nuevos (guardada por activo)
+  const prevNuevos = prevData ? (prevData.nuevos || {}) : {};
+
+  // Construir mapa de "nuevos" para esta sesión
+  const nuevosAhora = {};
+  if (prevNombres) {
+    filtered.forEach(a => {
+      const nom = a.nombre ?? a.name ?? a.activo ?? "";
+      if (!prevNombres.has(nom)) {
+        // Activo que no estaba antes: registrar desde ahora
+        nuevosAhora[nom] = prevNuevos[nom] || ahora;
+      } else if (prevNuevos[nom] && (ahora - prevNuevos[nom]) < MS10D) {
+        // Ya era nuevo y todavía no pasaron 10 días
+        nuevosAhora[nom] = prevNuevos[nom];
+      }
+    });
+  }
+
+  // Guardar estado actual para la próxima comparación
+  try {
+    localStorage.setItem(lsKey, JSON.stringify({
+      items: filtered.map(a => ({ nombre: a.nombre ?? a.name ?? a.activo ?? "" })),
+      nuevos: nuevosAhora,
+      ts: ahora
+    }));
+  } catch(e) {}
+
+  function esNuevo(nom) {
+    return nuevosAhora[nom] && (ahora - nuevosAhora[nom]) < MS10D;
+  }
+
   tt.innerHTML = `
     <div class="tt-title">${esc(nombre)}</div>
     ${filtered.map(a => {
       const pct = a.porcentaje ?? a.percentage ?? 0;
       const nom = a.nombre ?? a.name ?? a.activo ?? "—";
-      return `<div class="tt-item">
-        <div class="tt-activo">${esc(nom)}
-          <div class="tt-bar-wrap"><div class="tt-bar" style="width:${(pct/mx*100).toFixed(1)}%"></div></div>
+      const nuevo = esNuevo(nom);
+      return `<div class="tt-item" style="${nuevo?'background:rgba(34,211,160,.07);border-radius:5px;margin:1px 0':''}">
+        <div class="tt-activo">${esc(nom)}${nuevo?'<span class="tt-nuevo">NUEVO</span>':''}
+          <div class="tt-bar-wrap"><div class="tt-bar" style="width:${(pct/mx*100).toFixed(1)}%;${nuevo?'background:#22d3a0':''}"></div></div>
         </div>
-        <div class="tt-pct">${pct.toFixed(1)}%</div>
+        <div class="tt-pct" style="${nuevo?'color:#22d3a0':''}">${pct.toFixed(1)}%</div>
       </div>`;
     }).join("")}
     ${otros>0?`<div class="tt-item"><div class="tt-activo" style="color:var(--text3)">Otros</div><div class="tt-pct" style="color:var(--text3)">${otros.toFixed(1)}%</div></div>`:""}
