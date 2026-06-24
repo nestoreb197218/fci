@@ -1043,11 +1043,11 @@ function mostrarCartera(el, nombre, claseId, fondoId) {
       ? (res.data?.data ?? res.data ?? [])
       : (res.items ?? []);
     const fecha = res.fecha ?? "";
-    renderCartera(tt, nombre, items, fecha, fichaUrl);
+    renderCartera(tt, nombre, items, fecha, fichaUrl, fondoId);
   });
 }
 
-function renderCartera(tt, nombre, items, fecha, fichaUrl) {
+function renderCartera(tt, nombre, items, fecha, fichaUrl, fondoId) {
   const filtered = items.filter(a => (a.porcentaje ?? a.percentage ?? 0) > 1)
     .sort((a,b) => (b.porcentaje??b.percentage??0) - (a.porcentaje??a.percentage??0));
   if (!filtered.length) {
