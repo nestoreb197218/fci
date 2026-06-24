@@ -27,7 +27,7 @@
   --yellow:#b86e00;--orange:#b85010;--red:#b02828;
   --accent:#b86e00
 }
-body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;min-height:100vh;transition:background .25s,color .25s}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;min-height:100vh;transition:background .25s,color .25s;zoom:0.85}
 /* ── Botón tema ── */
 #btn-tema{
   display:inline-flex;align-items:center;gap:5px;
@@ -934,8 +934,17 @@ function mostrarRanking(btn, tipoRenta) {
   rankActual = tipoRenta;
   const rect = btn.getBoundingClientRect();
   if (window.innerWidth > 600) {
-    tt.style.top  = Math.min(rect.bottom + 8, window.innerHeight - 400) + "px";
-    tt.style.left = Math.min(rect.left, window.innerWidth - 380) + "px";
+    const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+    const vw = window.innerWidth / zoom, vh = window.innerHeight / zoom;
+    const r = {top:rect.top/zoom, bottom:rect.bottom/zoom, left:rect.left/zoom};
+    const ttW = 380, ttH = 400, mg = 10;
+    let top = r.bottom + 8;
+    if (top + ttH > vh - mg) top = Math.max(mg, r.top - ttH - 8);
+    let left = r.left;
+    if (left + ttW > vw - mg) left = vw - ttW - mg;
+    if (left < mg) left = mg;
+    tt.style.top  = top + "px";
+    tt.style.left = left + "px";
   } else {
     document.getElementById("tt-overlay").style.display = "block";
   }
@@ -1003,8 +1012,17 @@ function mostrarCartera(el, nombre, claseId, fondoId) {
 
   const rect = el.getBoundingClientRect();
   if (window.innerWidth > 600) {
-    tt.style.top  = Math.min(rect.bottom + 8, window.innerHeight - 420) + window.scrollY + "px";
-    tt.style.left = Math.min(rect.left, window.innerWidth - 380) + "px";
+    const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+    const vw = window.innerWidth / zoom, vh = window.innerHeight / zoom;
+    const r = {top:rect.top/zoom, bottom:rect.bottom/zoom, left:rect.left/zoom};
+    const ttW = 380, ttH = 430, mg = 10;
+    let top = r.bottom + 8;
+    if (top + ttH > vh - mg) top = Math.max(mg, r.top - ttH - 8);
+    let left = r.left;
+    if (left + ttW > vw - mg) left = vw - ttW - mg;
+    if (left < mg) left = mg;
+    tt.style.top  = top + "px";
+    tt.style.left = left + "px";
   } else {
     document.getElementById("tt-overlay").style.display = "block";
   }
