@@ -22,43 +22,40 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15
 
 /* ── HERO ── */
 #hero{
-  padding:14px 24px 12px;
+  padding:10px 24px 8px;
   text-align:center;
   border-bottom:1px solid var(--border);
   background:radial-gradient(ellipse at 50% 0%, #1a2840 0%, var(--bg) 70%);
-  max-height:20vh;display:flex;flex-direction:column;justify-content:center;
 }
 .hero-label{
   font-size:9px;letter-spacing:.15em;text-transform:uppercase;
-  color:var(--text3);margin-bottom:4px
+  color:var(--text3);margin-bottom:3px
 }
 .hero-title{
-  font-family:'Syne',sans-serif;font-size:clamp(16px,2.8vw,26px);font-weight:800;
-  line-height:1.1;margin-bottom:6px;
+  font-family:'Syne',sans-serif;font-size:clamp(14px,2.2vw,22px);font-weight:800;
+  line-height:1.1;margin-bottom:5px;
   background:linear-gradient(135deg,var(--accent) 0%,#f87171 60%,#a78bfa 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent
 }
 .hero-sub{display:none}
 .hero-stats{
-  display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:8px
+  display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-bottom:6px
 }
 .hero-stat{text-align:center}
 .hero-stat-val{
-  font-family:'Syne',sans-serif;font-size:15px;font-weight:800;
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:800;
   color:var(--accent);display:block
 }
-.hero-stat-lbl{font-size:9px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase}
-
+.hero-stat-lbl{font-size:8px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase}
 .btn-buscador{
   display:inline-flex;align-items:center;gap:6px;
-  padding:5px 16px;border-radius:7px;
+  padding:4px 14px;border-radius:6px;
   background:var(--accent);color:#000;
-  font-family:var(--font);font-size:11px;font-weight:600;
-  text-decoration:none;letter-spacing:.03em;
-  transition:opacity .2s
+  font-family:var(--font);font-size:10px;font-weight:600;
+  text-decoration:none;letter-spacing:.03em;transition:opacity .2s
 }
 .btn-buscador:hover{opacity:.85}
-.btn-buscador svg{width:11px;height:11px;flex-shrink:0}
+.btn-buscador svg{width:10px;height:10px;flex-shrink:0}
 
 /* ── LOADING ── */
 #loading{
@@ -74,7 +71,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15
 
 /* ── MAIN CONTENT ── */
 #content{display:none}
-.section{max-width:1100px;margin:0 auto;padding:20px 24px 0}
+.section{max-width:1100px;margin:0 auto;padding:16px 24px 0}
 .section-title{
   font-family:'Syne',sans-serif;font-size:20px;font-weight:800;
   color:var(--text);margin-bottom:8px
@@ -253,8 +250,8 @@ const TIPO_RENTA_MAP = {"308": "Mercado de Dinero", "3445": "Renta Fija", "1682"
 const COL = {
   nombre:0, moneda:1, region:2, horizonte:3, fecha:4,
   vcp:5, var_dia:7, var_mes:9, var_anio:10, var_12m:11,
-  clase_id:20, patrimonio:14, market_share:16, depositaria:17,
-  honorario:30
+  clase_id:13, patrimonio:14, market_share:16, depositaria:17,
+  honorario:18
 };
 
 let DATA = [];
@@ -281,28 +278,45 @@ function procesarXLSX(buffer){
   const ws = wb.Sheets[wb.SheetNames[0]];
   const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
 
+  // Extraer tipo desde el texto de la fila de categoría del Excel
+  // ej: "Renta Variable Peso Argentina" → "Renta Variable"
+  const TIPOS_VALIDOS = ['Mercado de Dinero','Renta Fija','Renta Variable','Renta Mixta','Retorno Total','Infraestructura','PyMes','ASG'];
+  function tipoDesdeCategoria(cat){
+    if(!cat) return null;
+    for(const t of TIPOS_VALIDOS){ if(cat.startsWith(t)) return t; }
+    return null;
+  }
+
   let fechaData = '';
+  let categoriaActual = '';
+  let tipoActual = null;
   const fondos = [];
 
   for(let i=10; i<rows.length; i++){
     const row = rows[i];
-    if(!row || row.length < 5) continue;
+    if(!row || !row[0]) continue;
+    const nombre = String(row[0]).trim();
     const moneda = row[COL.moneda];
-    if(!moneda || String(moneda).trim()==='') continue;
 
-    const claseId = String(row[COL.clase_id]??'');
-    const tipo = TIPO_RENTA_MAP[claseId] ?? null;
-    const nombre = String(row[COL.nombre]??'').trim();
+    // Fila de categoría (sin moneda)
+    if(!moneda || String(moneda).trim()===''){
+      if(!nombre.startsWith('(*') && !nombre.startsWith('Adv') && nombre.length>2){
+        categoriaActual = nombre;
+        tipoActual = tipoDesdeCategoria(nombre);
+      }
+      continue;
+    }
+
+    if(!tipoActual || !nombre) continue;
+
     const monedaStr = String(moneda).trim();
     const patrimonio = flt(row[COL.patrimonio]);
-    const var_anio = flt(row[COL.var_anio]);
-    const var_12m = flt(row[COL.var_12m]);
+    const var_anio   = flt(row[COL.var_anio]);
+    const var_12m    = flt(row[COL.var_12m]);
     const fecha = String(row[COL.fecha]??'').trim();
     if(fecha && !fechaData) fechaData = fecha;
 
-    if(!tipo || !nombre) continue;
-
-    fondos.push({ nombre, moneda:monedaStr, tipo, patrimonio, var_anio, var_12m });
+    fondos.push({ nombre, moneda:monedaStr, tipo:tipoActual, patrimonio, var_anio, var_12m });
   }
 
   DATA = fondos;
