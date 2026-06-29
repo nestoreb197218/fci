@@ -99,16 +99,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15
 }
 .acord-name{
   font-family:'Syne',sans-serif;font-size:15px;font-weight:700;
-  flex:1
+  flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap
 }
-.acord-badge{
-  font-size:10px;padding:2px 8px;border-radius:20px;
-  background:var(--bg4);color:var(--text3);
-  border:1px solid var(--border2)
+.acord-head-pills{
+  display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end
 }
+.head-pills,.head-pills-periodo{display:flex;gap:6px;flex-wrap:wrap}
 .acord-arrow{
   font-size:12px;color:var(--text3);
-  transition:transform .2s
+  transition:transform .2s;flex-shrink:0
 }
 .acord.open .acord-arrow{transform:rotate(180deg)}
 .acord-body{
@@ -117,6 +116,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15
   border-top:1px solid var(--border)
 }
 .acord.open .acord-body{display:block}
+
+@media(max-width:640px){
+  .acord-head{flex-wrap:wrap}
+  .acord-name{white-space:normal;flex:1 1 100%;order:1}
+  .acord-icon{order:0}
+  .acord-head-pills{order:2;width:100%;justify-content:flex-start;margin-top:6px}
+  .acord-arrow{order:0;margin-left:auto}
+}
 
 /* ── TABS dentro del acordeón ── */
 .tab-bar{
@@ -466,12 +473,13 @@ function renderAcordeon(tipo){
     <div class="acord-head" onclick="toggleAcord('${id}')">
       <div class="acord-icon" style="background:${color}"></div>
       <div class="acord-name">${tipo}</div>
-      <div class="acord-badge">${total} fondos</div>
+      <div class="acord-head-pills" onclick="event.stopPropagation()">
+        <div class="head-pills">${tabsMoneda}</div>
+        <div class="head-pills-periodo">${tabsPeriodo}</div>
+      </div>
       <div class="acord-arrow">▼</div>
     </div>
     <div class="acord-body">
-      <div class="tab-bar">${tabsMoneda}</div>
-      <div class="tab-bar tab-bar-periodo">${tabsPeriodo}</div>
       ${contenidoMonedas}
     </div>
   </div>`;
@@ -487,7 +495,7 @@ function toggleAcord(id){
 function switchMoneda(acordId, moneda, btn){
   const acord = document.getElementById(acordId);
   acord.querySelectorAll('.moneda-content').forEach(t=>{ t.style.display='none'; t.classList.remove('activo'); });
-  acord.querySelectorAll('.tab-bar:not(.tab-bar-periodo) .tab').forEach(t=>t.classList.remove('active'));
+  acord.querySelectorAll('.head-pills .tab').forEach(t=>t.classList.remove('active'));
   const target = document.getElementById(acordId+'-'+moneda);
   if(target){ target.style.display='block'; target.classList.add('activo'); }
   btn.classList.add('active');
@@ -498,7 +506,7 @@ function switchMoneda(acordId, moneda, btn){
 // su tabla, manteniendo siempre visibles las 4 columnas con la elegida resaltada.
 function switchPeriodo(acordId, periodoKey, btn){
   const acord = document.getElementById(acordId);
-  acord.querySelectorAll('.tab-bar-periodo .tab').forEach(t=>t.classList.remove('active'));
+  acord.querySelectorAll('.head-pills-periodo .tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
 
   acord.querySelectorAll('.moneda-content').forEach(cont=>{
