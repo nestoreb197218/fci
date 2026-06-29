@@ -234,7 +234,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15
 <div id="content">
   <div class="section">
     <div class="section-title">Top fondos por rendimiento</div>
-    <div class="section-sub">TOP 5 POR TIPO · MONEY MARKET EN TNA, RESTO RENDIMIENTO DIRECTO · FONDOS CON PATRIMONIO ACTIVO</div>
+    <div class="section-sub">TOP 10 POR TIPO · MONEY MARKET EN TNA, RESTO RENDIMIENTO DIRECTO · FONDOS CON PATRIMONIO ACTIVO</div>
     <div id="rankings-container"></div>
   </div>
 </div>
@@ -429,7 +429,7 @@ function top5(tipo, moneda, campo){
   );
   return dedupeClases(candidatos)
     .sort((a,b) => (b[campo]??-999) - (a[campo]??-999))
-    .slice(0,5);
+    .slice(0,10);
 }
 
 // ── Render tabla ranking ───────────────────────────────────────────────────
