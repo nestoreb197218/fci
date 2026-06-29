@@ -385,16 +385,49 @@ function calcStats(){
   document.getElementById('stat-usd').textContent = usd.length.toLocaleString('es-AR');
 }
 
+// ── Deduplicar por clase ───────────────────────────────────────────────────
+// Cuando un mismo fondo tiene varias clases (A, B, C... o variantes como H2),
+// el ranking debe mostrar una sola fila por fondo: la de clase A si existe,
+// si no la B, si no la C, y así sucesivamente. Clases no estandar (ej. "Ley
+// Nº 27.743") quedan al final, en orden alfabético entre sí.
+function nombreBase(nombre){
+  return nombre.replace(/\s*-\s*Clase\b.*$/i, '').trim();
+}
+
+function claseRank(nombre){
+  const m = nombre.match(/-\s*Clase\s+([A-Za-z])(\d*)\b/i);
+  if(m) return [0, m[1].toUpperCase().charCodeAt(0), m[2] ? parseInt(m[2],10) : 0];
+  return [1, 0, 0];
+}
+
+function compararClase(a, b){
+  const rA = claseRank(a.nombre), rB = claseRank(b.nombre);
+  if(rA[0] !== rB[0]) return rA[0] - rB[0];
+  if(rA[1] !== rB[1]) return rA[1] - rB[1];
+  if(rA[2] !== rB[2]) return rA[2] - rB[2];
+  return a.nombre.localeCompare(b.nombre);
+}
+
+function dedupeClases(lista){
+  const mejores = new Map();
+  for(const f of lista){
+    const base = nombreBase(f.nombre);
+    const actual = mejores.get(base);
+    if(!actual || compararClase(f, actual) < 0) mejores.set(base, f);
+  }
+  return Array.from(mejores.values());
+}
+
 // ── Calcular top 5 ─────────────────────────────────────────────────────────
 function top5(tipo, moneda, campo){
-  return DATA
-    .filter(f =>
-      f.tipo === tipo &&
-      f.moneda === moneda &&
-      f.patrimonio > 0 &&
-      f[campo] !== null &&
-      Math.abs(f[campo]) <= MAX_REND
-    )
+  const candidatos = DATA.filter(f =>
+    f.tipo === tipo &&
+    f.moneda === moneda &&
+    f.patrimonio > 0 &&
+    f[campo] !== null &&
+    Math.abs(f[campo]) <= MAX_REND
+  );
+  return dedupeClases(candidatos)
     .sort((a,b) => (b[campo]??-999) - (a[campo]??-999))
     .slice(0,5);
 }
@@ -403,10 +436,10 @@ function top5(tipo, moneda, campo){
 // Muestra siempre las 4 temporalidades; "campoActivo" es la que ordena el
 // top 5 (elegida con la pastilla) y se resalta con color en el header/celda.
 const PERIODOS = [
-  { key:'r_dia',  label:'🕐 Día' },
-  { key:'r_mes',  label:'🗓️ Mes' },
-  { key:'r_anio', label:'📅 Año' },
-  { key:'r_12m',  label:'📆 12 meses' },
+  { key:'r_dia',  label:'Día' },
+  { key:'r_mes',  label:'Mes' },
+  { key:'r_anio', label:'Año' },
+  { key:'r_12m',  label:'12 meses' },
 ];
 
 function renderTabla(fondos, campoActivo){
@@ -461,7 +494,7 @@ function renderAcordeon(tipo){
   }).join('');
 
   const tabsMoneda = monedas.map((mon,i)=>
-    `<button class="tab${i===0?' active':''}" onclick="switchMoneda('${id}','${mon}',this)">${mon==='ARS'?'🇦🇷 Pesos':'🇺🇸 Dólares'}</button>`
+    `<button class="tab${i===0?' active':''}" onclick="switchMoneda('${id}','${mon}',this)">${mon==='ARS'?'Pesos':'Dólares'}</button>`
   ).join('');
 
   const tabsPeriodo = PERIODOS.map((p,i)=>
